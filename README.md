@@ -5,7 +5,7 @@ Prosta aplikacja do zarządzania codziennymi zadaniami, stworzona w technologii 
 ## Funkcje
 * Dodawanie nowych zadań z nazwą, datą i godzinami (start/koniec).
 * Inteligentne parsowanie godzin.
-* Śledzenie statusu zadań (NotDone, InProgress, Done).
+* Śledzenie statusu zadań (Oczekujące, Trwa, Zrealizowane).
 * Automatyczne zliczanie zadań w pasku statusu.
 * Filtrowanie i przeglądanie zadań w tabeli.
 
@@ -18,6 +18,6 @@ Prosta aplikacja do zarządzania codziennymi zadaniami, stworzona w technologii 
 1. Upewnij się, że masz zainstalowane .NET SDK.
 2. Sklonuj repozytorium lub pobierz pliki.
 3. W terminalu, w głównym folderze projektu, wpisz:
-   ```bash dotnet build ```
-   ```bash dotnet ef database update```
-   ```bash dotnet run```
+   - ```bash dotnet build ```
+   - ```bash dotnet ef database update```
+   - ```bash dotnet run```

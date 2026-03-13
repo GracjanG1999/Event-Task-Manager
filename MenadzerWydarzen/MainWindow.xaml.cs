@@ -72,7 +72,7 @@ namespace MenadzerWydarzen
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (EventsGrid.SelectedItem is Wydarzenie selected) // Zmieniono nazwę kontrolki
+            if (EventsGrid.SelectedItem is Wydarzenie selected)
             {
                 _context.Wydarzenia.Remove(selected);
                 _context.SaveChanges();
@@ -82,7 +82,7 @@ namespace MenadzerWydarzen
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            if (EventsGrid.SelectedItem is Wydarzenie selected) // Zmieniono nazwę kontrolki
+            if (EventsGrid.SelectedItem is Wydarzenie selected)
             {
                 selected.Status = selected.Status switch
                 {
