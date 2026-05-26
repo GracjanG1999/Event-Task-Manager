@@ -1,6 +1,29 @@
+# ── Build outputs ────────────────────────────────────────────────
 bin/
 obj/
+publish/
+
+# ── Visual Studio ────────────────────────────────────────────────
 .vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ── JetBrains Rider ──────────────────────────────────────────────
+.idea/
+
+# ── Baza danych SQLite ───────────────────────────────────────────
 *.db
 *.db-shm
 *.db-wal
+
+# ── NuGet ────────────────────────────────────────────────────────
+*.nupkg
+packages/
+.nuget/
+
+# ── System operacyjny ────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+.DS_Store

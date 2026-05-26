@@ -1,0 +1,93 @@
+<Window x:Class="MenadzerWydarzen.EditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Edytuj Wydarzenie"
+        Height="480" Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Nazwa -->
+        <TextBlock Grid.Row="0" Text="Nazwa:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+        <TextBox   Grid.Row="1" x:Name="NameInput" Margin="0,0,0,10"/>
+
+        <!-- Data + czasy -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="110"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="110"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Data:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                <DatePicker x:Name="DatePickerCtrl"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="Start (HH:mm):" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                <TextBox x:Name="StartTimeInput"/>
+            </StackPanel>
+            <StackPanel Grid.Column="4">
+                <TextBlock Text="Koniec (HH:mm):" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                <TextBox x:Name="EndTimeInput"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Status + Priorytet -->
+        <Grid Grid.Row="3" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Status:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                <ComboBox x:Name="StatusCombo">
+                    <ComboBoxItem Content="Oczekujące"/>
+                    <ComboBoxItem Content="Trwa"/>
+                    <ComboBoxItem Content="Zrealizowane"/>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="Priorytet:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                <ComboBox x:Name="PriorityCombo">
+                    <ComboBoxItem Content="Niski"/>
+                    <ComboBoxItem Content="Średni"/>
+                    <ComboBoxItem Content="Wysoki"/>
+                    <ComboBoxItem Content="Krytyczny"/>
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- Kategoria -->
+        <TextBlock Grid.Row="4" Text="Kategoria:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+        <TextBox   Grid.Row="5" x:Name="CategoryInput" Margin="0,0,0,10"/>
+
+        <!-- Opis -->
+        <TextBlock Grid.Row="6" Text="Opis / Notatki:" FontWeight="SemiBold" Margin="0,0,0,3"/>
+        <TextBox   Grid.Row="7" x:Name="DescriptionInput"
+                   AcceptsReturn="True" TextWrapping="Wrap"
+                   VerticalScrollBarVisibility="Auto" Margin="0,0,0,10"/>
+
+        <!-- Przyciski -->
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Zapisz" Click="OkButton_Click" Width="80"
+                    Background="LightGreen" Margin="0,0,10,0"/>
+            <Button Content="Anuluj" Click="CancelButton_Click" Width="80"
+                    Background="LightCoral"/>
+        </StackPanel>
+    </Grid>
+</Window>
