@@ -28,7 +28,27 @@ namespace MenadzerWydarzen
         {
             if (string.IsNullOrWhiteSpace(NameInput.Text))
             {
-                MessageBox.Show("Nazwa jest wymagana!", "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Nazwa jest wymagana!", "Błąd",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                NameInput.Focus();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(StartTimeInput.Text) &&
+                WydarzenieHelper.ParseTime(StartTimeInput.Text) == null)
+            {
+                MessageBox.Show("Nieprawidłowy format godziny startu.\nUżyj formatu HH:mm, np. 09:30",
+                    "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                StartTimeInput.Focus();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(EndTimeInput.Text) &&
+                WydarzenieHelper.ParseTime(EndTimeInput.Text) == null)
+            {
+                MessageBox.Show("Nieprawidłowy format godziny końca.\nUżyj formatu HH:mm, np. 17:00",
+                    "Błąd", MessageBoxButton.OK, MessageBoxImage.Warning);
+                EndTimeInput.Focus();
                 return;
             }
 

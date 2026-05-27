@@ -23,6 +23,13 @@ publish/
 packages/
 .nuget/
 
+# ── VS Code ──────────────────────────────────────────────────────
+.vscode/
+
+# ── Claude Code ──────────────────────────────────────────────────
+.claude/
+.claude/settings.local.json
+
 # ── System operacyjny ────────────────────────────────────────────
 Thumbs.db
 desktop.ini

@@ -17,10 +17,10 @@ namespace MenadzerWydarzen
 
             Loaded += (_, _) =>
             {
-                var w = SystemParameters.PrimaryScreenWidth;
-                var h = SystemParameters.PrimaryScreenHeight;
-                Left = w - Width - 20;
-                Top  = h - Height - 60;
+                var w = SystemParameters.WorkArea.Width;
+                var h = SystemParameters.WorkArea.Height;
+                Left = w - ActualWidth  - 20;
+                Top  = h - ActualHeight - 20;
             };
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };

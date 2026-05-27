@@ -2,226 +2,214 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:MenadzerWydarzen"
-        Title="Menadżer Wydarzeń" Height="860" Width="860"
-        WindowStartupLocation="CenterScreen">
+        Title="Menadżer Wydarzeń" Height="780" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
 
     <Window.Resources>
         <local:StatusConverter   x:Key="StatusConverter"/>
         <local:PriorityConverter x:Key="PriorityConverter"/>
         <local:RowColorConverter x:Key="RowColorConverter"/>
+
+        <!-- Wspólny RowStyle dla obu DataGrid -->
+        <Style x:Key="ColoredRow" TargetType="DataGridRow">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource RowColorConverter}">
+                        <Binding Path="Status"/>
+                        <Binding Path="PlannedDate"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EEF2FF"/>
+                </Trigger>
+                <Trigger Property="IsSelected"  Value="True">
+                    <Setter Property="Background" Value="#C7D2FE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
-    <Grid Margin="15">
+    <Grid Margin="18,14,18,14">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>  <!-- tytuł       -->
+            <RowDefinition Height="Auto"/>  <!-- filtry      -->
+            <RowDefinition Height="Auto"/>  <!-- przyciski   -->
+            <RowDefinition Height="*"/>     <!-- zakładki    -->
+            <RowDefinition Height="Auto"/>  <!-- podsumowanie-->
         </Grid.RowDefinitions>
 
-        <!-- ═══ FORMULARZ DODAWANIA ═══ -->
-        <GroupBox Grid.Row="0" Header="Dodaj nowe wydarzenie" Margin="0,0,0,8" Padding="10">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+        <!-- ═══ TYTUŁ ═══════════════════════════════════════════ -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,14">
+            <TextBlock Text="📋" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="Menadżer Wydarzeń"
+                       FontSize="22" FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
 
-                    <!-- lewa: nazwa, data, czasy -->
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Nazwa:"/>
-                        <TextBox x:Name="NameInput" Margin="0,3,0,6"/>
-
-                        <TextBlock Text="Data planowana:"/>
-                        <DatePicker x:Name="PlannedDatePicker" Margin="0,3,0,6"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel Width="130">
-                                <TextBlock Text="Start (HH:mm):"/>
-                                <TextBox x:Name="StartTimeInput" Margin="0,3,0,0"/>
-                            </StackPanel>
-                            <StackPanel Width="130" Margin="10,0,0,0">
-                                <TextBlock Text="Koniec (HH:mm):"/>
-                                <TextBox x:Name="EndTimeInput" Margin="0,3,0,0"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- prawa: status, priorytet, kategoria, opis -->
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Status:"/>
-                        <ComboBox x:Name="StatusCombo" Margin="0,3,0,6">
-                            <ComboBoxItem Content="Oczekujące" IsSelected="True"/>
-                            <ComboBoxItem Content="Trwa"/>
-                            <ComboBoxItem Content="Zrealizowane"/>
-                        </ComboBox>
-
-                        <TextBlock Text="Priorytet:"/>
-                        <ComboBox x:Name="PriorityCombo" Margin="0,3,0,6">
-                            <ComboBoxItem Content="Niski"/>
-                            <ComboBoxItem Content="Średni" IsSelected="True"/>
-                            <ComboBoxItem Content="Wysoki"/>
-                            <ComboBoxItem Content="Krytyczny"/>
-                        </ComboBox>
-
-                        <TextBlock Text="Kategoria:"/>
-                        <TextBox x:Name="CategoryInput" Margin="0,3,0,6"/>
-
-                        <TextBlock Text="Opis / Notatki:"/>
-                        <TextBox x:Name="DescriptionInput" Height="42"
-                                 AcceptsReturn="True" TextWrapping="Wrap"
-                                 VerticalScrollBarVisibility="Auto" Margin="0,3,0,0"/>
-                    </StackPanel>
+        <!-- ═══ FILTRY ════════════════════════════════════════════ -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid Width="210" VerticalAlignment="Center" Margin="0,0,18,0">
+                    <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged"/>
+                    <TextBlock Text="🔍  Szukaj nazwy, opisu..." IsHitTestVisible="False"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </Grid>
 
-                <Button Content="Dodaj Wydarzenie" Click="AddButton_Click"
-                        Margin="0,10,0,0" Height="30" Background="LightBlue"/>
-            </StackPanel>
-        </GroupBox>
-
-        <!-- ═══ FILTRY ═══ -->
-        <GroupBox Grid.Row="1" Header="Filtruj" Margin="0,0,0,6" Padding="8,6">
-            <WrapPanel>
-                <TextBlock Text="Szukaj:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <TextBox x:Name="SearchBox" Width="160" VerticalAlignment="Center"
-                         TextChanged="SearchBox_TextChanged" Margin="0,0,16,0"/>
-
-                <TextBlock Text="Status:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox x:Name="StatusFilter" Width="115" VerticalAlignment="Center"
-                          SelectionChanged="StatusFilter_SelectionChanged" Margin="0,0,16,0">
+                <TextBlock Text="Status" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
+                <ComboBox x:Name="StatusFilter" Width="120" VerticalAlignment="Center"
+                          SelectionChanged="StatusFilter_SelectionChanged" Margin="0,0,18,0">
                     <ComboBoxItem Content="Wszystkie" IsSelected="True"/>
                     <ComboBoxItem Content="Oczekujące"/>
                     <ComboBoxItem Content="Trwa"/>
                     <ComboBoxItem Content="Zrealizowane"/>
                 </ComboBox>
 
-                <TextBlock Text="Kategoria:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <ComboBox x:Name="CategoryFilter" Width="120" VerticalAlignment="Center"
+                <TextBlock Text="Kategoria" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
+                <ComboBox x:Name="CategoryFilter" Width="140" VerticalAlignment="Center"
                           SelectionChanged="CategoryFilter_SelectionChanged"/>
-            </WrapPanel>
-        </GroupBox>
+            </StackPanel>
+        </Border>
 
-        <!-- ═══ PRZYCISKI AKCJI ═══ -->
+        <!-- ═══ PRZYCISKI ══════════════════════════════════════════ -->
         <StackPanel Grid.Row="2" Orientation="Horizontal"
-                    HorizontalAlignment="Right" Margin="0,0,0,6">
-            <Button Content="Edytuj" Click="EditButton_Click"
-                    Width="80" Margin="0,0,6,0" Background="LightGreen"/>
-            <Button Content="Usuń" Click="DeleteButton_Click"
-                    Width="65" Margin="0,0,6,0" Background="LightCoral"/>
-            <Button Content="Eksportuj CSV" Click="ExportButton_Click"
-                    Width="105" Margin="0,0,6,0" Background="LightYellow"/>
+                    HorizontalAlignment="Right" Margin="0,0,0,10">
+            <Button Content="Edytuj" Style="{StaticResource SuccessButton}"
+                    Click="EditButton_Click" Width="80" Margin="0,0,8,0"/>
+            <Button Content="Usuń" Style="{StaticResource DangerButton}"
+                    Click="DeleteButton_Click" Width="72" Margin="0,0,8,0"/>
+            <Button Content="Eksport CSV" Style="{StaticResource WarningButton}"
+                    Click="ExportButton_Click" Width="105" Margin="0,0,8,0"/>
             <Button x:Name="NotificationToggleBtn"
-                    Content="Powiadomienia: ON" Click="NotificationToggle_Click"
-                    Width="145" Background="PaleTurquoise"/>
+                    Content="🔔  Powiadomienia: WŁĄCZONE"
+                    Style="{StaticResource InfoButton}"
+                    Click="NotificationToggle_Click"
+                    MinWidth="260" Height="40" FontSize="13" Padding="14,0"/>
         </StackPanel>
 
-        <!-- ═══ ZAKŁADKI ═══ -->
-        <TabControl Grid.Row="3" Margin="0,0,0,6">
+        <!-- ═══ ZAKŁADKI ══════════════════════════════════════════ -->
+        <Grid Grid.Row="3">
+            <Border Style="{StaticResource Card}"
+                    Padding="0" ClipToBounds="True" Margin="0,0,0,10">
+                <TabControl>
 
-            <!-- ── LISTA ── -->
-            <TabItem Header="Lista">
-                <DataGrid x:Name="EventsGrid"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserSortColumns="True"
-                          IsReadOnly="True"
-                          SelectionMode="Single"
-                          GridLinesVisibility="Horizontal"
-                          HorizontalScrollBarVisibility="Auto">
-
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Background">
-                                <Setter.Value>
-                                    <MultiBinding Converter="{StaticResource RowColorConverter}">
-                                        <Binding Path="Status"/>
-                                        <Binding Path="PlannedDate"/>
-                                    </MultiBinding>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </DataGrid.RowStyle>
-
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Nazwa"
-                            Binding="{Binding Name}" Width="175"/>
-                        <DataGridTextColumn Header="Data"
-                            Binding="{Binding PlannedDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="88"/>
-                        <DataGridTextColumn Header="Start"
-                            Binding="{Binding StartTime, StringFormat=\{0:hh\\:mm\}}" Width="50"/>
-                        <DataGridTextColumn Header="Koniec"
-                            Binding="{Binding EndTime, StringFormat=\{0:hh\\:mm\}}" Width="55"/>
-                        <DataGridTextColumn Header="Status"
-                            Binding="{Binding Status, Converter={StaticResource StatusConverter}}" Width="90"/>
-                        <DataGridTextColumn Header="Priorytet"
-                            Binding="{Binding Priority, Converter={StaticResource PriorityConverter}}" Width="75"/>
-                        <DataGridTextColumn Header="Kategoria"
-                            Binding="{Binding Category}" Width="85"/>
-                        <DataGridTextColumn Header="Opis"
-                            Binding="{Binding Description}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-
-            <!-- ── KALENDARZ ── -->
-            <TabItem Header="Kalendarz">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="8">
-                        <TextBlock Text="Wybierz datę:" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <Calendar x:Name="CalendarView"
-                                  SelectionMode="SingleDate"
-                                  SelectedDatesChanged="CalendarView_SelectedDatesChanged"/>
-                    </StackPanel>
-
-                    <Grid Grid.Column="1" Margin="8">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock x:Name="CalendarDateLabel"
-                                   Grid.Row="0" FontWeight="Bold" FontSize="13"
-                                   Margin="0,0,0,6"/>
-                        <DataGrid Grid.Row="1" x:Name="CalendarEventsGrid"
+                    <!-- ── LISTA ── -->
+                    <TabItem Header="Lista">
+                        <Grid>
+                        <DataGrid x:Name="EventsGrid"
                                   AutoGenerateColumns="False"
-                                  CanUserAddRows="False" IsReadOnly="True">
-                            <DataGrid.RowStyle>
-                                <Style TargetType="DataGridRow">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <MultiBinding Converter="{StaticResource RowColorConverter}">
-                                                <Binding Path="Status"/>
-                                                <Binding Path="PlannedDate"/>
-                                            </MultiBinding>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </DataGrid.RowStyle>
+                                  CanUserAddRows="False"
+                                  CanUserSortColumns="True"
+                                  IsReadOnly="True"
+                                  RowStyle="{StaticResource ColoredRow}"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  MouseDoubleClick="EventsGrid_MouseDoubleClick">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Nazwa"
-                                    Binding="{Binding Name}" Width="*"/>
+                                    Binding="{Binding Name}" Width="175"/>
+                                <DataGridTextColumn Header="Data"
+                                    Binding="{Binding PlannedDate, StringFormat=\{0:yyyy-MM-dd\}}" Width="90"/>
                                 <DataGridTextColumn Header="Start"
-                                    Binding="{Binding StartTime, StringFormat=\{0:hh\\:mm\}}" Width="50"/>
+                                    Binding="{Binding StartTime, StringFormat=\{0:hh\\:mm\}}" Width="52"/>
+                                <DataGridTextColumn Header="Koniec"
+                                    Binding="{Binding EndTime, StringFormat=\{0:hh\\:mm\}}" Width="57"/>
                                 <DataGridTextColumn Header="Status"
                                     Binding="{Binding Status, Converter={StaticResource StatusConverter}}" Width="95"/>
                                 <DataGridTextColumn Header="Priorytet"
-                                    Binding="{Binding Priority, Converter={StaticResource PriorityConverter}}" Width="75"/>
+                                    Binding="{Binding Priority, Converter={StaticResource PriorityConverter}}" Width="78"/>
+                                <DataGridTextColumn Header="Kategoria"
+                                    Binding="{Binding Category}" Width="88"/>
+                                <DataGridTextColumn Header="Opis"
+                                    Binding="{Binding Description}" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>
-                    </Grid>
-                </Grid>
-            </TabItem>
-        </TabControl>
+                        <TextBlock x:Name="EmptyStateText"
+                                   Text="📭  Brak wydarzeń spełniających kryteria"
+                                   FontSize="15" Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="Collapsed"/>
+                        </Grid>
+                    </TabItem>
 
-        <!-- ═══ PODSUMOWANIE ═══ -->
+                    <!-- ── KALENDARZ ── -->
+                    <TabItem Header="Kalendarz">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="16">
+                                <TextBlock Text="Wybierz datę" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           Margin="0,0,0,8"/>
+                                <Calendar x:Name="CalendarView"
+                                          SelectionMode="SingleDate"
+                                          SelectedDatesChanged="CalendarView_SelectedDatesChanged"/>
+                            </StackPanel>
+
+                            <Grid Grid.Column="1" Margin="0,16,16,16">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock x:Name="CalendarDateLabel"
+                                           Grid.Row="0" FontWeight="Bold" FontSize="15"
+                                           Margin="0,0,0,10"/>
+                                <DataGrid Grid.Row="1" x:Name="CalendarEventsGrid"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False" IsReadOnly="True"
+                                          RowStyle="{StaticResource ColoredRow}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Nazwa"
+                                            Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Start"
+                                            Binding="{Binding StartTime, StringFormat=\{0:hh\\:mm\}}" Width="52"/>
+                                        <DataGridTextColumn Header="Status"
+                                            Binding="{Binding Status, Converter={StaticResource StatusConverter}}" Width="95"/>
+                                        <DataGridTextColumn Header="Priorytet"
+                                            Binding="{Binding Priority, Converter={StaticResource PriorityConverter}}" Width="78"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <!-- FAB — pływający przycisk dodawania -->
+            <Button Style="{StaticResource FabButton}"
+                    Content="+"
+                    Click="FabButton_Click"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,24,24"
+                    Panel.ZIndex="10"
+                    ToolTip="Dodaj nowe wydarzenie"/>
+        </Grid>
+
+        <!-- ═══ PODSUMOWANIE ══════════════════════════════════════ -->
         <TextBlock Grid.Row="4" x:Name="TxtStatusSummary"
-                   Text="Statystyki: ładowanie..." FontWeight="Bold" FontSize="11"/>
+                   FontSize="12" FontWeight="SemiBold"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   Margin="4,0,0,0"/>
     </Grid>
 </Window>

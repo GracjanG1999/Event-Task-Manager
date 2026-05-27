@@ -1,6 +1,6 @@
 # 📋 Menadżer Wydarzeń
 
-> Desktopowa aplikacja WPF do zarządzania wydarzeniami, zadaniami i terminami — z powiadomieniami, filtrowaniem i eksportem CSV.
+> Desktopowa aplikacja WPF do zarządzania wydarzeniami, zadaniami i terminami — z automatyczną zmianą statusów, powiadomieniami, filtrowaniem i eksportem CSV.
 
 ---
 
@@ -8,16 +8,32 @@
 
 | Ikona | Funkcja | Opis |
 |:---:|---|---|
-| ➕ | **Dodawanie wydarzeń** | Nazwa, data, godzina startu/końca, status, priorytet, kategoria, opis |
-| ✏️ | **Pełna edycja** | Okno dialogowe do modyfikacji wszystkich pól |
+| ➕ | **Dodawanie wydarzeń** | Przycisk „+" otwiera dialog z pełnym formularzem |
+| ✏️ | **Pełna edycja** | Przycisk „Edytuj" lub **dwuklik** na wierszu |
 | 🗑️ | **Usuwanie** | Usuwanie z potwierdzeniem |
 | 🔍 | **Filtrowanie** | Szukaj po tekście, filtruj po statusie i kategorii |
 | 🎨 | **Kolorowanie wierszy** | Wizualne oznaczenie stanu każdego wydarzenia |
+| 🔄 | **Auto-status** | Status zmienia się automatycznie w oparciu o datę i godzinę |
 | 📅 | **Widok kalendarza** | Wybierz datę i przeglądaj wydarzenia w danym dniu |
 | 🔔 | **Powiadomienia** | Popup 15 min przed startem wydarzenia (włącz/wyłącz) |
 | 📊 | **Statystyki** | Licznik oczekujących, aktywnych, zrealizowanych i przeterminowanych |
 | 💾 | **Eksport CSV** | Zapis całej listy wydarzeń do pliku `.csv` |
 | 🔢 | **Sortowanie** | Kliknij nagłówek kolumny, aby posortować |
+| 📭 | **Pusta lista** | Komunikat gdy żadne wydarzenie nie pasuje do filtrów |
+
+---
+
+## 🔄 Automatyczna zmiana statusu
+
+Aplikacja co minutę (i przy starcie) sprawdza każde wydarzenie i aktualizuje jego status:
+
+| Warunek | Nowy status |
+|---|---|
+| Data planowana < dziś | ✅ **Zrealizowane** |
+| Data = dziś, godzina ≥ startu i < końca | 🔵 **Trwa** |
+| Data = dziś, godzina ≥ końca | ✅ **Zrealizowane** |
+
+> ⚠️ Status zmienia się tylko **do przodu** (Oczekujące → Trwa → Zrealizowane). Ręcznie ustawione „Zrealizowane" nigdy nie jest cofane.
 
 ---
 
@@ -91,14 +107,17 @@ ToDoList/
 │   ├── 📄 AppDbContext.cs            # EF Core + auto-migracja nowych kolumn
 │   ├── 📄 WydarzenieHelper.cs        # Współdzielone metody pomocnicze (DRY)
 │   │
-│   ├── 🖼️  MainWindow.xaml           # Główny interfejs: lista, filtry, kalendarz
-│   ├── 📄 MainWindow.xaml.cs         # Logika głównego okna
+│   ├── 🖼️  MainWindow.xaml           # Główny interfejs: lista, filtry, kalendarz, FAB
+│   ├── 📄 MainWindow.xaml.cs         # Logika: filtrowanie, auto-status, powiadomienia
 │   │
-│   ├── 🖼️  EditWindow.xaml           # Okno edycji wydarzenia
-│   ├── 📄 EditWindow.xaml.cs         # Logika okna edycji
+│   ├── 🖼️  AddWindow.xaml            # Dialog dodawania nowego wydarzenia (FAB +)
+│   ├── 📄 AddWindow.xaml.cs          # Walidacja + tworzenie obiektu Wydarzenie
 │   │
-│   ├── 🖼️  NotificationPopup.xaml    # Popup powiadomienia
-│   ├── 📄 NotificationPopup.xaml.cs  # Auto-zamknięcie po 8 s, pozycja bottom-right
+│   ├── 🖼️  EditWindow.xaml           # Dialog edycji wydarzenia
+│   ├── 📄 EditWindow.xaml.cs         # Walidacja + zapis zmian
+│   │
+│   ├── 🖼️  NotificationPopup.xaml    # Popup powiadomienia (bottom-right)
+│   ├── 📄 NotificationPopup.xaml.cs  # Auto-zamknięcie po 8 s
 │   │
 │   ├── 📄 StatusConverter.cs         # EventStatus  →  tekst PL
 │   ├── 📄 PriorityConverter.cs       # EventPriority → tekst PL
@@ -115,14 +134,14 @@ ToDoList/
 Aplikacja sprawdza co minutę, czy któreś z wydarzeń zaczyna się **w ciągu najbliższych 15 minut**.
 Jeśli tak — wyświetla popup w prawym dolnym rogu ekranu, który znika po **8 sekundach**.
 
-- Przycisk **„Powiadomienia: ON/OFF"** pozwala wyłączyć tę funkcję
+- Przycisk **🔔 Powiadomienia: WŁĄCZONE / 🔕 WYŁĄCZONE** przełącza tę funkcję
 - Każde wydarzenie jest notyfikowane tylko **raz na sesję**
 
 ---
 
 ## 📤 Eksport CSV
 
-Kliknij **„Eksportuj CSV"** → wybierz lokalizację zapisu.
+Kliknij **„Eksport CSV"** → wybierz lokalizację zapisu.  
 Plik zawiera kolumny: `Id, Nazwa, Data, Start, Koniec, Status, Priorytet, Kategoria, Opis`.
 
 ---

@@ -21,14 +21,14 @@ namespace MenadzerWydarzen
         public MainWindow()
         {
             InitializeComponent();
-            PlannedDatePicker.SelectedDate = DateTime.Today;
-            CalendarView.SelectedDate      = DateTime.Today;
+            CalendarView.SelectedDate = DateTime.Today;
 
             _notificationTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
-            _notificationTimer.Tick += (_, _) => CheckNotifications();
+            _notificationTimer.Tick += (_, _) => { UpdateStatuses(); CheckNotifications(); };
             _notificationTimer.Start();
 
             RefreshList();
+            UpdateStatuses();
             CheckNotifications();
         }
 
@@ -38,6 +38,7 @@ namespace MenadzerWydarzen
         {
             RefreshCategoryFilter();
             ApplyFilters();
+            RefreshCalendar();
         }
 
         private void RefreshCategoryFilter()
@@ -84,7 +85,9 @@ namespace MenadzerWydarzen
             if (selCat != null && selCat != "Wszystkie")
                 filtered = filtered.Where(e => e.Category == selCat);
 
-            EventsGrid.ItemsSource = filtered.ToList();
+            var result = filtered.ToList();
+            EventsGrid.ItemsSource = result;
+            EmptyStateText.Visibility = result.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             UpdateSummary(all);
         }
 
@@ -103,55 +106,17 @@ namespace MenadzerWydarzen
                 $"|  Zrealizowane: {done}  |  Przeterminowane: {overdue}";
         }
 
-        // ─── Obsługa formularza ─────────────────────────────────────────────
+        // ─── FAB — otwiera dialog dodawania ────────────────────────────────
 
-        private void AddButton_Click(object sender, RoutedEventArgs e)
+        private void FabButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(NameInput.Text))
+            var win = new AddWindow { Owner = this };
+            if (win.ShowDialog() == true && win.Result is { } ev)
             {
-                MessageBox.Show("Brak nazwy wydarzenia!", "Błąd",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                _context.Wydarzenia.Add(ev);
+                _context.SaveChanges();
+                RefreshList();
             }
-
-            var status = (StatusCombo.SelectedItem as ComboBoxItem)?.Content.ToString() switch
-            {
-                "Trwa"         => EventStatus.InProgress,
-                "Zrealizowane" => EventStatus.Done,
-                _              => EventStatus.NotDone
-            };
-
-            var priority = (PriorityCombo.SelectedItem as ComboBoxItem)?.Content.ToString() switch
-            {
-                "Niski"     => EventPriority.Low,
-                "Wysoki"    => EventPriority.High,
-                "Krytyczny" => EventPriority.Critical,
-                _           => EventPriority.Medium
-            };
-
-            _context.Wydarzenia.Add(new Wydarzenie
-            {
-                Name        = NameInput.Text.Trim(),
-                PlannedDate = PlannedDatePicker.SelectedDate ?? DateTime.Today,
-                StartTime   = ParseTime(StartTimeInput.Text),
-                EndTime     = ParseTime(EndTimeInput.Text),
-                Status      = status,
-                Priority    = priority,
-                Category    = NullIfBlank(CategoryInput.Text),
-                Description = NullIfBlank(DescriptionInput.Text)
-            });
-            _context.SaveChanges();
-
-            NameInput.Clear();
-            StartTimeInput.Clear();
-            EndTimeInput.Clear();
-            CategoryInput.Clear();
-            DescriptionInput.Clear();
-            PlannedDatePicker.SelectedDate = DateTime.Today;
-            StatusCombo.SelectedIndex   = 0;
-            PriorityCombo.SelectedIndex = 1;
-
-            RefreshList();
         }
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
@@ -224,15 +189,68 @@ namespace MenadzerWydarzen
             MessageBox.Show("Eksport zakończony!", "CSV", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        // ─── Automatyczna zmiana statusu ───────────────────────────────────
+
+        private void UpdateStatuses()
+        {
+            var now = DateTime.Now;
+            _context.ChangeTracker.Clear();
+            var events = _context.Wydarzenia.ToList();
+            bool changed = false;
+
+            foreach (var ev in events)
+            {
+                if (ev.Status == EventStatus.Done) continue; // nigdy nie cofamy zakończonych
+                if (!ev.PlannedDate.HasValue) continue;
+
+                var date = ev.PlannedDate.Value.Date;
+                var newStatus = ev.Status;
+
+                if (date < DateTime.Today)
+                {
+                    newStatus = EventStatus.Done;
+                }
+                else if (date == DateTime.Today)
+                {
+                    var nowTime = now.TimeOfDay;
+                    if (ev.EndTime.HasValue && nowTime >= ev.EndTime.Value)
+                        newStatus = EventStatus.Done;
+                    else if (ev.StartTime.HasValue && nowTime >= ev.StartTime.Value)
+                        newStatus = EventStatus.InProgress;
+                }
+
+                // tylko awansuj status do przodu (NotDone→InProgress→Done), nigdy wstecz
+                if ((int)newStatus > (int)ev.Status)
+                {
+                    ev.Status = newStatus;
+                    _context.Update(ev);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                _context.SaveChanges();
+                RefreshList();
+            }
+        }
+
         // ─── Powiadomienia ──────────────────────────────────────────────────
 
         private void NotificationToggle_Click(object sender, RoutedEventArgs e)
         {
             _notificationsEnabled = !_notificationsEnabled;
-            NotificationToggleBtn.Content    = _notificationsEnabled ? "Powiadomienia: ON" : "Powiadomienia: OFF";
-            NotificationToggleBtn.Background = _notificationsEnabled
-                ? System.Windows.Media.Brushes.PaleTurquoise
-                : System.Windows.Media.Brushes.LightGray;
+            if (_notificationsEnabled)
+            {
+                NotificationToggleBtn.Content    = "🔔  Powiadomienia: WŁĄCZONE";
+                NotificationToggleBtn.Background =
+                    (System.Windows.Media.Brush)Application.Current.Resources["InfoBrush"];
+            }
+            else
+            {
+                NotificationToggleBtn.Content    = "🔕  Powiadomienia: WYŁĄCZONE";
+                NotificationToggleBtn.Background = System.Windows.Media.Brushes.Gray;
+            }
         }
 
         private void CheckNotifications()
@@ -261,14 +279,24 @@ namespace MenadzerWydarzen
         // ─── Widok kalendarza ───────────────────────────────────────────────
 
         private void CalendarView_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+            => RefreshCalendar();
+
+        private void RefreshCalendar()
         {
-            if (!CalendarView.SelectedDate.HasValue) return;
+            if (CalendarView?.SelectedDate == null) return;
             var date = CalendarView.SelectedDate.Value.Date;
             CalendarDateLabel.Text = $"Wydarzenia: {date:dd MMMM yyyy}";
-
             CalendarEventsGrid.ItemsSource = LoadAll()
                 .Where(w => w.PlannedDate?.Date == date)
                 .ToList();
+        }
+
+        // ─── Dwuklik otwiera edycję ─────────────────────────────────────────
+
+        private void EventsGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (EventsGrid.SelectedItem is Wydarzenie)
+                EditButton_Click(sender, e);
         }
 
         // ─── Filtry ─────────────────────────────────────────────────────────
@@ -287,7 +315,5 @@ namespace MenadzerWydarzen
             return _context.Wydarzenia.ToList();
         }
 
-        private static TimeSpan? ParseTime(string text)  => WydarzenieHelper.ParseTime(text);
-        private static string?   NullIfBlank(string? s)  => WydarzenieHelper.NullIfBlank(s);
     }
 }
